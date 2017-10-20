@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="theme-color" content="#000000">
+  <!--
+    manifest.json provides metadata used when your web app is added to the
+    homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
+  -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+  <!--
+    Notice the use of %PUBLIC_URL% in the tags above.
+    It will be replaced with the URL of the `public` folder during the build.
+    Only files inside the `public` folder can be referenced from the HTML.
+
+    Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+    work correctly both with client-side routing and a non-root public URL.
+    Learn how to configure a non-root public URL by running `npm run build`.
+  -->
+  <title>React App</title>
+</head>
+<body>
+<noscript>
+  You need to enable JavaScript to run this app.
+</noscript>
+<div id="root"></div>
+<!--
+  This HTML file is a template.
+  If you open it directly in the browser, you will see an empty page.
+
+  You can add webfonts, meta tags, or analytics to this file.
+  The build step will place the bundled scripts into the <body> tag.
+
+  To begin the development, run `npm start` or `yarn start`.
+  To create a production bundle, use `npm run build` or `yarn build`.
+-->
+<button id="push-btn">푸쉬 받기</button>
+</body>
+<script src="https://www.gstatic.com/firebasejs/4.5.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase-messaging.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyCpHcDwjIh68Q8bRDcBoZWsn4WoDsGokmU",
+    authDomain: "boxture-f69e6.firebaseapp.com",
+    databaseURL: "https://boxture-f69e6.firebaseio.com",
+    projectId: "boxture-f69e6",
+    storageBucket: "boxture-f69e6.appspot.com",
+    messagingSenderId: "351209097395"
+  };
+  firebase.initializeApp(config);
+
+
+  const messaging = firebase.messaging();
+  document.querySelector('#push-btn').addEventListener('click', function() {
+    messaging.requestPermission()
+      .then(function() {
+        console.log('Notification permission granted.');
+        // TODO(developer): Retrieve an Instance ID token for use with FCM.
+        messaging.getToken()
+          .then(function(currentToken) {
+            console.log("이게 모야", currentToken);
+            if (currentToken) {
+              console.log("커런트 토큰", currentToken);
+              //sendTokenToServer(currentToken);
+              //updateUIForPushEnabled(currentToken);
+            } else {
+              // Show permission request.
+              console.log('No Instance ID token available. Request permission to generate one.');
+              // Show permission UI.
+              //updateUIForPushPermissionRequired();
+              //setTokenSentToServer(false);
+            }
+          })
+          .catch(function(err) {
+            console.log('An error occurred while retrieving token. ', err);
+            //showToken('Error retrieving Instance ID token. ', err);
+            //setTokenSentToServer(false);
+          });
+      })
+      .catch(function(err) {
+        console.log('Unable to get permission to notify.', err);
+      });
+  });
+
+  messaging.onMessage(function(payload) {
+    console.log("Message received. ", payload);
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+      body: payload.notification.body,
+      icon: payload.notification.icon,
+    };
+
+    if (!("Notification" in window)) {
+      console.log("This browser does not support system notifications");
+    }
+    // Let's check whether notification permissions have already been granted
+    else if (Notification.permission === "granted") {
+      // If it's okay let's create a notification
+      var notification = new Notification(notificationTitle,notificationOptions);
+      notification.onclick = function(event) {
+        event.preventDefault(); // prevent the browser from focusing the Notification's tab
+        window.open(payload.notification.click_action , '_blank');
+        notification.close();
+      }
+    }
+  });
+</script>
+</html>
